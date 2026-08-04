@@ -89,3 +89,4 @@ Recorded so the reasoning survives:
 - The always-loaded memory `feedback-check-outstanding-board-first-on-resume` had described the board as "the authoritative latest checkpoint", which trained the stop-reading behavior directly. It was repointed at the master list in the same change that created this skill.
 
 Related: `feedback-verify-stale-status-claims-in-board` (the staleness half), `feedback-check-outstanding-board-first-on-resume` (the resume-order half).
+

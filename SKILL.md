@@ -9,13 +9,15 @@ description: >
   "save state", "housekeeping on the board", or any turn where you are about to write a
   checkpoint or recite open items. Covers the two procedures (OPEN the board, CLOSE with a
   checkpoint), the master-list invariant that stops open items being buried inside
-  checkpoint prose, live-state re-verification before reciting infra, and reconciliation
-  against MEMORY.md. Do NOT use this for the harness's ephemeral per-session TodoWrite
+  checkpoint prose, when live-state re-verification is and is not warranted,
+  reconciliation against MEMORY.md, and the no-rewrite rule for dated records
+  (checkpoints, memory files, standing reminders).
+  Do NOT use this for the harness's ephemeral per-session TodoWrite
   list — that is unrelated transient state, not the board.
 license: Apache-2.0
 metadata:
   author: Vincent Yin
-  version: "1.0.0"
+  version: "1.2.0"
 ---
 
 # Outstanding Board Workflow
@@ -42,7 +44,12 @@ Run this on "resume", "show the board", "what's outstanding", or before answerin
 
 1. **Read `MEMORY.md`, then the board.**
 2. **Read the MASTER LIST table. That is the inventory.** Recite from it. If the board has no master list, build one before answering — sweep the whole file plus `MEMORY.md`'s Active Work section and enumerate every open item into a table at the top.
-3. **Re-verify any live-state claim before repeating it.** Board labels about infrastructure go stale. Read-only checks are free, so run them: `gcloud compute instances list`, `addresses list`, `networks list`, `firewall-rules list`, and whatever else the board asserts. Never recite a resource list you have not just confirmed.
+3. **Do NOT re-verify live cloud state by default.** Reciting the board is a read of the board, not an audit of the cloud. Skip the `gcloud` sweep unless one of these holds:
+   - The user asks for it.
+   - The next action you are about to take depends on a resource actually existing.
+   - You are about to make a positive claim about live infrastructure that goes beyond "the board says X" — in that case either verify it or attribute it to the board.
+
+   When a later task does need current infra state, set the check up then. (User's call, 2026-08-09: an unconditional sweep on every board display is wasted work.)
 4. **Read the latest checkpoint for CONTEXT ONLY** — decisions to honor, corrections the user made, evidence pointers. Do not mine it for items. If you find an open item there that has no master-list row, that is a defect: add the row.
 5. **Reconcile the master list against `MEMORY.md`'s Active Work section.** Any item present in one and absent from the other is a bug. Fix both. Also check `MEMORY-CLOSED.md` before assuming a topic has no prior memory.
 
@@ -73,11 +80,23 @@ Run this on "checkpoint", "wrap up", "end of session", or before a long break.
 
 If yes, you have just recreated the original failure. Add the row before finishing.
 
-## Never Rewrite a Checkpoint
+## Never Rewrite a Dated Record — "the no-rewrite rule"
 
-A checkpoint is a historical record. When a later decision supersedes it, **leave the old text alone** — rewriting it falsifies the record. Instead, note the supersession in the master list or in the closed-items block near it, naming what is stale and why.
+**Cite this section by that name.** It is the only place the name is defined, so a reference to "the no-rewrite rule" always resolves here.
 
-This applies to renamed resources too. Text describing what previously existed keeps the old names.
+A dated record says what was true, or believed, on a given date. When a later fact supersedes it, **leave the old text alone** — rewriting it falsifies the record. Append the correction instead, dated, naming what is now stale and why.
+
+**Scope — all 3 kinds of dated record:**
+
+1. **Checkpoints on the board.** Note the supersession in the master list, or in the closed-items block near the checkpoint.
+2. **Memory files** — running notes, learning tasks, plans. Put the correction in a block at the top of the body, above the original text.
+3. **Standing reminders and other dated blocks** inside the board.
+
+Renamed resources follow the same principle. Text describing what previously existed keeps the old names.
+
+**What the rule does NOT cover.** Guidance text is not a record. The board's header and invariant block, a skill's own instructions, and `MEMORY.md`'s index hooks all describe how things are *now*, so edit them in place and do not append a correction. The test is whether the text carries a date or describes a past state.
+
+⚠️ **Do not cite this rule for anything outside that scope.** It was invoked for months as unnamed shorthand, drifting past what any written source said, until the user challenged the citation on 2026-08-09 and found the name existed nowhere. Naming it here is the fix. Keep it honest: if a case is not covered above, say what you are doing and why, without borrowing this rule's authority.
 
 ## Why This Skill Exists
 

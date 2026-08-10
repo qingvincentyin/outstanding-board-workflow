@@ -17,7 +17,7 @@ description: >
 license: Apache-2.0
 metadata:
   author: Vincent Yin
-  version: "1.5.0"
+  version: "1.6.1"
 ---
 
 # Outstanding Board Workflow
@@ -34,9 +34,23 @@ This skill exists because of one specific, repeated failure: **a checkpoint read
 
 Three consequences, and all three are load-bearing:
 
-1. **A checkpoint's "next actions" are master-list row numbers, never prose.** Write `Next: items 1 and 2`. Never describe the work again in the checkpoint — a description is how an item ends up existing only there.
+1. **A checkpoint's "next actions" are master-list IDs, never prose.** Write `Next: #101, #104`. Never describe the work again in the checkpoint — a description is how an item ends up existing only there.
 2. **Reciting the board means reciting the master list.** Checkpoints are read for context (decisions, corrections, evidence), never for inventory.
 3. **Because of 1 and 2, it is safe to stop reading after the latest checkpoint.** That is the point. The invariant buys the right to stop reading; without it, every recital needs a full end-to-end read, which has already been shown to fail on a long append-heavy file.
+
+## Permanent IDs — Never Renumber
+
+Every master-list item carries a **permanent ID** from one incrementing counter: `#101`, `#102`, `#103`. Assign it once. It belongs to that item forever, and it is **never reused** after the item closes. Table order is free to change; IDs are not.
+
+**The counter lives on the board**, in the 🆔 block above the master list, as a `NEXT ID TO ASSIGN` line. Bump it the moment you assign one. ⛔ **Never derive the next ID by scanning the table.** Closed IDs are gone from it, so the highest open ID is not the highest assigned ID, and scanning would hand out a duplicate.
+
+**Why the old scheme failed:** positional row numbers renumber whenever an item closes, and every reference written before that silently rots. The board was renumbered 13 times in 6 days. `MEMORY.md` ended up pointing at "board row 8" for an item that had become row 7. A cross-reference in a memory file, a checkpoint, or a conversation now stays correct forever. (The user proposed this on 2026-08-09; the numbering starts at 101 so an ID never looks like a positional index.)
+
+**Old references still say "row N".** Every checkpoint, archive entry, and memory file written on or before 2026-08-09 uses the positional scheme. ⛔ **Do not back-propagate IDs into them** — they are dated records, and rewriting them falsifies the record. The board carries a translation table for the final positional numbering, plus a frozen renumber log for resolving older references. Translate on read; write only IDs from now on.
+
+**This section is the authoritative statement of the rule. The board holds only the data.** That split is deliberate — a rule written in 2 places drifts. On the board you will find the counter, the translation table, and the frozen renumber log, plus a 2-line guard so a session that never loaded this skill still cannot renumber or reuse by accident. Everything else about the scheme belongs here. Fix a conflict here, not there.
+
+**Starting a fresh board:** open the counter at `#101`. Three digits keep an ID from ever reading as a positional index, and the leading `1` makes `#101` visibly not "item 1".
 
 ## Procedure A — OPEN the Board
 
@@ -95,10 +109,10 @@ When a contradiction turns up, fix **all** copies of the stale claim, not only t
 Run this on "checkpoint", "wrap up", "end of session", or before a long break.
 
 1. **Establish what changed** this session — work done, decisions made, corrections received.
-2. **Add master-list rows FIRST, before writing any checkpoint prose.** Every new open item gets a row now. This ordering is the whole mechanism: prose written first is prose that becomes the item's only home.
-3. **Close finished items** — delete the row, move the detail to the archive. Do not leave a `✅` row on the live board; that is what makes the list long enough to bury things.
+2. **Add master-list rows FIRST, before writing any checkpoint prose.** Every new open item gets a row now, with the next ID off the board's counter. Bump the counter in the same edit. This ordering is the whole mechanism: prose written first is prose that becomes the item's only home.
+3. **Close finished items** — delete the row, move the detail to the archive. The ID goes with it and is retired, never reused. Do not leave a `✅` row on the live board; that is what makes the list long enough to bury things.
    - **A standing reminder is a finished item too, and it needs one extra step.** A reminder block carries *imperatives* ("raise it unprompted", "raise it every session", "on every resume until it is done"). Appending a `✅ COMPLETE` line to the bottom does **not** cancel them — the next session reads the imperative and obeys it. **Move the whole block to the archive** the moment the work completes, and leave a one-line pointer on the board saying it is retired and must not be raised again. See "Retiring a Standing Reminder" below.
-4. **Write the checkpoint as history.** What happened, what was decided, what was corrected, what the evidence was. Next-actions are row numbers only.
+4. **Write the checkpoint as history.** What happened, what was decided, what was corrected, what the evidence was. Next-actions are IDs only.
 5. **Sweep `MEMORY.md`'s Active Work** so it matches the master list. Move closed entries to `MEMORY-CLOSED.md` with the evidence for closing each.
 6. **Record doc baselines** if docs changed — hash, line count, snapshot path.
 7. **Run the invariant self-check below.** This is a required step.

@@ -17,7 +17,7 @@ description: >
 license: Apache-2.0
 metadata:
   author: Vincent Yin
-  version: "1.2.0"
+  version: "1.5.0"
 ---
 
 # Outstanding Board Workflow
@@ -50,8 +50,36 @@ Run this on "resume", "show the board", "what's outstanding", or before answerin
    - You are about to make a positive claim about live infrastructure that goes beyond "the board says X" — in that case either verify it or attribute it to the board.
 
    When a later task does need current infra state, set the check up then. (User's call, 2026-08-09: an unconditional sweep on every board display is wasted work.)
-4. **Read the latest checkpoint for CONTEXT ONLY** — decisions to honor, corrections the user made, evidence pointers. Do not mine it for items. If you find an open item there that has no master-list row, that is a defect: add the row.
+4. **Read the latest checkpoint for CONTEXT ONLY** — decisions to honor, corrections the user made, evidence pointers. Do not mine it for items. If you find an open item there that has no master-list row, that is a defect: add the row. ⚠️ **This read informs you; it is not output.** Do not relay it in a board recital — see "What a Recital Actually Shows" below.
 5. **Reconcile the master list against `MEMORY.md`'s Active Work section.** Any item present in one and absent from the other is a bug. Fix both. Also check `MEMORY-CLOSED.md` before assuming a topic has no prior memory.
+
+### What a Recital Actually Shows
+
+A board recital answers one question: **what is still open?** The master list answers it. Almost everything else in the file is machinery for maintaining the board, and reciting machinery buries the answer.
+
+**Show the master-list rows. That is the whole answer.** At most, add one short line naming which rows are blocked on the user.
+
+**Do not show** (internal, keep it to yourself):
+
+- **The latest checkpoint's contents.** No session recap, no "here's what changed last time", no digest of decisions to honor. See "Two Different Requests" below.
+- **Doc baselines** — md5 hashes, line counts, snapshot paths. These exist so *you* can detect a hand-edit the user never mentioned. They are an instrument, not news. Surface one **only** when it is actionable for them: drift turned up that they did not make, or they asked.
+- **Bookkeeping** — renumbering history, reconciliation notes, archive pointers, master-list row counts as a statistic.
+- **Closed items.** A closed item has no claim on their attention. That includes retired standing reminders.
+
+⚠️ Recorded 2026-08-09, across 3 rounds of the same complaint. The user got a retired standing reminder, then a line of md5 hashes, and asked of each: *"Why do you need to remind me that at all? That's your internal housekeeping which I don't need to know."* They then cut checkpoint context too: *"If I only ask you to 'show the board', don't drag along the old baggage."* **The test is whether the line could change what they do next.** If not, it stays in the file where you found it.
+
+#### Two Different Requests
+
+Displaying the board and recapping the session are separate asks. Do not merge them.
+
+| The user says | You answer with |
+|---|---|
+| "show the board", "what's outstanding", "what's left" | The master-list table. Nothing else. |
+| "where were we?", "what did we do last session?", "catch me up" | The latest checkpoint's context. Add the table if it helps. |
+
+Both phrasings load this skill, so the trigger list is not the discriminator. Read the request itself.
+
+⚠️ **You still READ the checkpoint on every board open** — Procedure A step 4 is unchanged. Reading it is how you catch an open item that has no master-list row. That is a defect check, and **its output is a new row in the table, not a paragraph for the user.** Read it; do not relay it. Because any defect you find becomes a row, the table stays a complete answer on its own.
 
 ### Verify a Status Before Relaying It
 
@@ -69,6 +97,7 @@ Run this on "checkpoint", "wrap up", "end of session", or before a long break.
 1. **Establish what changed** this session — work done, decisions made, corrections received.
 2. **Add master-list rows FIRST, before writing any checkpoint prose.** Every new open item gets a row now. This ordering is the whole mechanism: prose written first is prose that becomes the item's only home.
 3. **Close finished items** — delete the row, move the detail to the archive. Do not leave a `✅` row on the live board; that is what makes the list long enough to bury things.
+   - **A standing reminder is a finished item too, and it needs one extra step.** A reminder block carries *imperatives* ("raise it unprompted", "raise it every session", "on every resume until it is done"). Appending a `✅ COMPLETE` line to the bottom does **not** cancel them — the next session reads the imperative and obeys it. **Move the whole block to the archive** the moment the work completes, and leave a one-line pointer on the board saying it is retired and must not be raised again. See "Retiring a Standing Reminder" below.
 4. **Write the checkpoint as history.** What happened, what was decided, what was corrected, what the evidence was. Next-actions are row numbers only.
 5. **Sweep `MEMORY.md`'s Active Work** so it matches the master list. Move closed entries to `MEMORY-CLOSED.md` with the evidence for closing each.
 6. **Record doc baselines** if docs changed — hash, line count, snapshot path.
@@ -79,6 +108,23 @@ Run this on "checkpoint", "wrap up", "end of session", or before a long break.
 > Read the checkpoint you just wrote. **Does any sentence describe work that has no master-list row?**
 
 If yes, you have just recreated the original failure. Add the row before finishing.
+
+### Retiring a Standing Reminder
+
+A standing reminder is the one board construct that tells a **future** session to speak up unprompted. That makes it the one construct that keeps firing after the work is done.
+
+**The failure it produces:** the reminder completes, someone appends `✅ FULLY COMPLETE` to the bottom of the block, and the block stays in the OPEN ITEMS section — still headed *"… IS DUE"*, still containing *"raise it unprompted … on every resume until it is done"*. Every later session reads the live imperative near the top, obeys it, and re-raises a closed item. The `✅` line at the bottom does not stop this, because the imperative is not a status field; it is an instruction.
+
+**The fix, when the work completes:**
+
+1. **Move the entire block to the archive, verbatim.** This is a relocation, not a rewrite, so the no-rewrite rule is satisfied — do not edit a word of the block itself.
+2. **Head the archived copy with a warning** that its imperatives are spent, naming them, so a reader who lands there does not act on them.
+3. **Leave a one-line pointer on the live board** — retired, moved, and ⛔ do not raise again, do not restore.
+4. **Fix any pointer that referenced the block's position** ("the block below"). Those live in guidance text, which is editable in place.
+
+**Why relocation and not annotation:** position is what makes a reminder fire. A block sitting in OPEN ITEMS reads as open, whatever its bottom line says. Only moving it out changes what the next session does.
+
+⚠️ Recorded 2026-08-09, when the user asked *"Why do you keep reminding me of the Phase 9 teardown … It's ancient history by now."* The teardown finished 2026-08-08 and the block had carried a closing `✅✅ FULLY COMPLETE` line ever since — and sessions still raised it, because the *"Raise it unprompted"* line 22 lines above was never neutralized.
 
 ## Never Rewrite a Dated Record — "the no-rewrite rule"
 

@@ -17,7 +17,7 @@ description: >
 license: Apache-2.0
 metadata:
   author: Vincent Yin
-  version: "1.6.1"
+  version: "1.9.1"
 ---
 
 # Outstanding Board Workflow
@@ -35,7 +35,7 @@ This skill exists because of one specific, repeated failure: **a checkpoint read
 Three consequences, and all three are load-bearing:
 
 1. **A checkpoint's "next actions" are master-list IDs, never prose.** Write `Next: #101, #104`. Never describe the work again in the checkpoint — a description is how an item ends up existing only there.
-2. **Reciting the board means reciting the master list.** Checkpoints are read for context (decisions, corrections, evidence), never for inventory.
+2. **Reciting the board means printing the 📺 PRINTABLE BOARD block**, a pre-rendered view of the master list kept in sync at every checkpoint. Checkpoints are read for context (decisions, corrections, evidence), never for inventory. The master list stays authoritative: when block and list disagree, the list wins and the block is stale.
 3. **Because of 1 and 2, it is safe to stop reading after the latest checkpoint.** That is the point. The invariant buys the right to stop reading; without it, every recital needs a full end-to-end read, which has already been shown to fail on a long append-heavy file.
 
 ## Permanent IDs — Never Renumber
@@ -56,8 +56,32 @@ Every master-list item carries a **permanent ID** from one incrementing counter:
 
 Run this on "resume", "show the board", "what's outstanding", or before answering any question about remaining work.
 
-1. **Read `MEMORY.md`, then the board.**
-2. **Read the MASTER LIST table. That is the inventory.** Recite from it. If the board has no master list, build one before answering — sweep the whole file plus `MEMORY.md`'s Active Work section and enumerate every open item into a table at the top.
+> ⚡ **STOP AFTER STEP 1 for a bare "show the board" / "what's outstanding" / "what's left".** Those ask for the inventory, and step 1 is the whole answer. **Steps 2–5 run only when you are about to WORK the board** — a "resume", a checkpoint, or any turn that will act on an item. Running steps 3–5 to answer a display request is exactly the waste this design removes.
+
+1. **"Show the board" is a VERBATIM PRINT, not a read of the board.** The board keeps a pre-rendered 📺 PRINTABLE BOARD block, regenerated at every checkpoint. Print it and stop — one command, ~1.3 KB, no summarising:
+
+   ```bash
+   cd <project memory dir>
+   awk '/BOARD-TABLE:BEGIN/{f=1;next} /BOARD-TABLE:END/{exit} f' project-outstanding-board.md
+   ```
+
+   ⛔ **Do NOT read the master list, a checkpoint, or `MEMORY.md` to answer "show the board".** The block already carries the item count, every row, the blocked-on-user line, and the `Next:` pointer. ⛔ **Do NOT dump a line range from the board** — it is ~490 KB and a single master-list row runs to 7 KB on one line, so even `sed -n '29,100p'` overruns the tool's output cap and gets truncated to a file.
+
+   **If the block is missing or stale**, regenerate it with Procedure B step 4 before answering, and say in one line that you did. Staleness shows as a count mismatch:
+
+   ```bash
+   grep -c '^| \*\*#' project-outstanding-board.md     # master-list rows; must equal the block's count
+   ```
+
+2. **Anything deeper than a recital reads the MASTER LIST**, which stays authoritative for detail. Pull rows without dumping a range:
+
+   ```bash
+   awk '/^\| \*\*#/' project-outstanding-board.md | cut -c1-400
+   grep -n 'NEXT ID TO ASSIGN' project-outstanding-board.md
+   ```
+
+   ⚠️ **A `cut` slice is a truncation, not a summary** — a 4 KB cell's operative qualifier can sit past the cut. Never paraphrase a sliced cell into a claim; widen the slice for the row you actually need.
+
 3. **Do NOT re-verify live cloud state by default.** Reciting the board is a read of the board, not an audit of the cloud. Skip the `gcloud` sweep unless one of these holds:
    - The user asks for it.
    - The next action you are about to take depends on a resource actually existing.
@@ -82,14 +106,19 @@ A board recital answers one question: **what is still open?** The master list an
 
 ⚠️ Recorded 2026-08-09, across 3 rounds of the same complaint. The user got a retired standing reminder, then a line of md5 hashes, and asked of each: *"Why do you need to remind me that at all? That's your internal housekeeping which I don't need to know."* They then cut checkpoint context too: *"If I only ask you to 'show the board', don't drag along the old baggage."* **The test is whether the line could change what they do next.** If not, it stays in the file where you found it.
 
-#### Two Different Requests
+#**This section covers the BOARD half only.** The general rule — Claude's own memory, index, board and scratchpad upkeep is done automatically, never announced, never offered as a choice — lives in the user's global `CLAUDE.md` under Working Method, because it applies when no board is in sight (editing a doc, verifying anchors, re-rendering a diagram) and `CLAUDE.md` is always loaded whereas this skill is not. ⛔ Do not restate that rule here; a rule written in 2 places drifts.
+
+### Two Different Requests
 
 Displaying the board and recapping the session are separate asks. Do not merge them.
 
 | The user says | You answer with |
 |---|---|
+| **"resume"** (bare) | **The next concrete action itself.** Not an inventory — go to the item the latest checkpoint's `Next:` line names, and open with the step that item is actually sitting on. |
 | "show the board", "what's outstanding", "what's left" | The master-list table. Nothing else. |
 | "where were we?", "what did we do last session?", "catch me up" | The latest checkpoint's context. Add the table if it helps. |
+
+⚠️ **"resume" means CONTINUE THE WORK, not "inventory the work."** Recorded 2026-08-30, after a bare "resume" was answered with the 9-row master list: *"my original prompt was 'resume', not 'show the board'. So, why didn't you bring me right to the step inside #114?"* The checkpoint's `Next:` line exists precisely to answer "resume" in one hop — read it, then go do that. Recite the table only if the `Next:` line is missing or names something already closed, or if the user asks for the list.
 
 Both phrasings load this skill, so the trigger list is not the discriminator. Read the request itself.
 
@@ -112,10 +141,14 @@ Run this on "checkpoint", "wrap up", "end of session", or before a long break.
 2. **Add master-list rows FIRST, before writing any checkpoint prose.** Every new open item gets a row now, with the next ID off the board's counter. Bump the counter in the same edit. This ordering is the whole mechanism: prose written first is prose that becomes the item's only home.
 3. **Close finished items** — delete the row, move the detail to the archive. The ID goes with it and is retired, never reused. Do not leave a `✅` row on the live board; that is what makes the list long enough to bury things.
    - **A standing reminder is a finished item too, and it needs one extra step.** A reminder block carries *imperatives* ("raise it unprompted", "raise it every session", "on every resume until it is done"). Appending a `✅ COMPLETE` line to the bottom does **not** cancel them — the next session reads the imperative and obeys it. **Move the whole block to the archive** the moment the work completes, and leave a one-line pointer on the board saying it is retired and must not be raised again. See "Retiring a Standing Reminder" below.
-4. **Write the checkpoint as history.** What happened, what was decided, what was corrected, what the evidence was. Next-actions are IDs only.
-5. **Sweep `MEMORY.md`'s Active Work** so it matches the master list. Move closed entries to `MEMORY-CLOSED.md` with the evidence for closing each.
-6. **Record doc baselines** if docs changed — hash, line count, snapshot path.
-7. **Run the invariant self-check below.** This is a required step.
+4. **Regenerate the 📺 PRINTABLE BOARD block.** ⭐ **This is what makes "show the board" cheap** — it moves the whole cost of rendering into the checkpoint, where it belongs. Rewrite the block between the 2 delimiters so it matches the master list exactly: the item count in the heading, one row per open item, the blocked-on-user line, and a `Next:` line matching the checkpoint's. Keep each row on one line and under ~150 characters — this block is a VIEW, and detail belongs in the master-list row. ⛔ Never edit a row here without editing its master-list row in the same pass.
+
+   ⚠️ **Keep the delimiter strings out of surrounding prose.** The extractor matches the first occurrence, so a copy of the marker in a nearby paragraph or code block makes it match its own documentation and print the instructions instead of the table. That is why the board file points at this skill for the command rather than repeating it.
+
+5. **Write the checkpoint as history.** What happened, what was decided, what was corrected, what the evidence was. Next-actions are IDs only.
+6. **Sweep `MEMORY.md`'s Active Work** so it matches the master list. Move closed entries to `MEMORY-CLOSED.md` with the evidence for closing each.
+7. **Record doc baselines** if docs changed — hash, line count, snapshot path.
+8. **Run the invariant self-check below.** This is a required step.
 
 ### The Invariant Self-Check
 

@@ -17,7 +17,7 @@ description: >
 license: Apache-2.0
 metadata:
   author: Vincent Yin
-  version: "1.9.1"
+  version: "1.10.0"
 ---
 
 # Outstanding Board Workflow
@@ -41,6 +41,14 @@ Three consequences, and all three are load-bearing:
 ## Permanent IDs — Never Renumber
 
 Every master-list item carries a **permanent ID** from one incrementing counter: `#101`, `#102`, `#103`. Assign it once. It belongs to that item forever, and it is **never reused** after the item closes. Table order is free to change; IDs are not.
+
+**An ID is spent the moment it is ASSIGNED, not when the item closes.** ⛔ Never reuse a number, whatever became of the item that held it — closed, archived, merged into another item, or **rescinded before any work started**. Retirement is unconditional.
+
+**The rescinded case is the one that looks reusable, and is not.** An ID handed out and withdrawn minutes later, for an item that never existed in any real sense, invites winding the counter back. ⛔ Do not. By the time you assign an ID you have usually already written it somewhere you are forbidden to edit — a checkpoint, an archive annotation, a memory file. Those records say *"`#NNN` opened"*. Reissue the number to a different item and every one of them silently starts pointing at the wrong work. The counter is cheap; three digits never run out. An ambiguous historical record is not cheap.
+
+⚠️ **When you do rescind one, say so next to the counter** — the number, both dates, why it was withdrawn, and ⛔ do not reuse. That line is what stops a later session "reclaiming" an apparent gap in the sequence. A gap in the numbering is normal and needs no explanation; a gap someone tries to fill is the bug.
+
+⭐ Recorded 2026-09-04. `#137` was opened for a doc write-up, and the user redirected the work into the re-opened `#136` instead. Claude retired `#137` rather than winding the counter back, because a dated checkpoint line already recorded it as opened. The user confirmed the call: *"never re-use an item number even if that number has been rescinded."*
 
 **The counter lives on the board**, in the 🆔 block above the master list, as a `NEXT ID TO ASSIGN` line. Bump it the moment you assign one. ⛔ **Never derive the next ID by scanning the table.** Closed IDs are gone from it, so the highest open ID is not the highest assigned ID, and scanning would hand out a duplicate.
 
@@ -139,7 +147,7 @@ Run this on "checkpoint", "wrap up", "end of session", or before a long break.
 
 1. **Establish what changed** this session — work done, decisions made, corrections received.
 2. **Add master-list rows FIRST, before writing any checkpoint prose.** Every new open item gets a row now, with the next ID off the board's counter. Bump the counter in the same edit. This ordering is the whole mechanism: prose written first is prose that becomes the item's only home.
-3. **Close finished items** — delete the row, move the detail to the archive. The ID goes with it and is retired, never reused. Do not leave a `✅` row on the live board; that is what makes the list long enough to bury things.
+3. **Close finished items** — delete the row, move the detail to the archive. The ID goes with it and is retired, never reused (as is any ID that was assigned and then rescinded — see "Permanent IDs"). Do not leave a `✅` row on the live board; that is what makes the list long enough to bury things.
    - **A standing reminder is a finished item too, and it needs one extra step.** A reminder block carries *imperatives* ("raise it unprompted", "raise it every session", "on every resume until it is done"). Appending a `✅ COMPLETE` line to the bottom does **not** cancel them — the next session reads the imperative and obeys it. **Move the whole block to the archive** the moment the work completes, and leave a one-line pointer on the board saying it is retired and must not be raised again. See "Retiring a Standing Reminder" below.
 4. **Regenerate the 📺 PRINTABLE BOARD block.** ⭐ **This is what makes "show the board" cheap** — it moves the whole cost of rendering into the checkpoint, where it belongs. Rewrite the block between the 2 delimiters so it matches the master list exactly: the item count in the heading, one row per open item, the blocked-on-user line, and a `Next:` line matching the checkpoint's. Keep each row on one line and under ~150 characters — this block is a VIEW, and detail belongs in the master-list row. ⛔ Never edit a row here without editing its master-list row in the same pass.
 
@@ -155,6 +163,17 @@ Run this on "checkpoint", "wrap up", "end of session", or before a long break.
 > Read the checkpoint you just wrote. **Does any sentence describe work that has no master-list row?**
 
 If yes, you have just recreated the original failure. Add the row before finishing.
+
+### Re-opening a Closed Item
+
+A closed item can come back — usually because closing it orphaned work that had no other home. Keep its ID and its history; ⛔ do not mint a new number for the continuation.
+
+1. **Restore ONE row to the master list, under the original ID**, and write it as a live spec: what is done, what is now open. ⛔ Do not paste the archived text back verbatim — it was written to describe a finished thing.
+2. **Leave the archive entry in place and annotate it as superseded**, naming the live row as the authority. ⛔ Never delete it; it is a dated record, and it usually stays accurate about the part that really did finish.
+3. **Say in the row why it re-opened.** That reason is the thing a later session needs, and it is the thing most easily lost.
+4. **⛔ Do not split the finished part from the continuation across 2 items.** The evidence and the work it feeds are one body; separating them parks the evidence in an archive nobody reads.
+
+⭐ Recorded 2026-09-04, from `#136`: an experiment closed cleanly, but the write-up it produced fitted no other open item. Claude first opened a new item for the write-up; the user redirected it back into `#136` and was right — the experiment and its finding are one body of work.
 
 ### Retiring a Standing Reminder
 

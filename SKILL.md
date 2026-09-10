@@ -17,7 +17,7 @@ description: >
 license: Apache-2.0
 metadata:
   author: Vincent Yin
-  version: "1.10.0"
+  version: "1.11.0"
 ---
 
 # Outstanding Board Workflow
@@ -80,6 +80,14 @@ Run this on "resume", "show the board", "what's outstanding", or before answerin
    ```bash
    grep -c '^| \*\*#' project-outstanding-board.md     # master-list rows; must equal the block's count
    ```
+
+1b. **"Show the plan for `#NNN`" is ALSO a verbatim print, from that item's own block.** An item whose work runs as a numbered step or phase ladder keeps a pre-rendered plan block, delimited `PLAN-<ID>:BEGIN` / `PLAN-<ID>:END`. Print it and stop:
+
+   ```bash
+   awk '/PLAN-114:BEGIN/{f=1;next} /PLAN-114:END/{exit} f' project-outstanding-board.md
+   ```
+
+   ⛔ **Do NOT answer a plan request by slicing the item's master-list row.** A long-running item's row is an append-only NARRATIVE, not a plan — `#114`'s is 26 KB on one line, and reading it in `cut` chunks costs ~8 tool calls to reach an answer the block already holds. ⚠️ Recorded 2026-09-09, when exactly that happened and the user asked: *"What took you so much work to just list the plan?"* **If no plan block exists for the item**, build one from the step table inside its row, insert it next to the 📺 PRINTABLE BOARD block, and say in one line that you did. Regenerate it in Procedure B whenever a step or phase changes state.
 
 2. **Anything deeper than a recital reads the MASTER LIST**, which stays authoritative for detail. Pull rows without dumping a range:
 

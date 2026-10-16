@@ -17,7 +17,7 @@ description: >
 license: Apache-2.0
 metadata:
   author: Vincent Yin
-  version: "1.11.0"
+  version: "1.11.1"
 ---
 
 # Outstanding Board Workflow
@@ -78,8 +78,11 @@ Run this on "resume", "show the board", "what's outstanding", or before answerin
    **If the block is missing or stale**, regenerate it with Procedure B step 4 before answering, and say in one line that you did. Staleness shows as a count mismatch:
 
    ```bash
-   grep -c '^| \*\*#' project-outstanding-board.md     # master-list rows; must equal the block's count
+   # master-list rows only (skips the block's own rows); must equal the block's count
+   awk '/BOARD-TABLE:BEGIN/{b=1} /BOARD-TABLE:END/{b=0} !b && /^\| \*\*#/{n++} END{print n}' project-outstanding-board.md
    ```
+
+   ⚠️ A plain `grep -c '^| \*\*#'` counts the block's rows too, so it always reports double the true count and never matches.
 
 1b. **"Show the plan for `#NNN`" is ALSO a verbatim print, from that item's own block.** An item whose work runs as a numbered step or phase ladder keeps a pre-rendered plan block, delimited `PLAN-<ID>:BEGIN` / `PLAN-<ID>:END`. Print it and stop:
 

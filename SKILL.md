@@ -17,7 +17,7 @@ description: >
 license: Apache-2.0
 metadata:
   author: Vincent Yin
-  version: "1.11.1"
+  version: "1.13.0"
 ---
 
 # Outstanding Board Workflow
@@ -59,6 +59,19 @@ Every master-list item carries a **permanent ID** from one incrementing counter:
 **This section is the authoritative statement of the rule. The board holds only the data.** That split is deliberate — a rule written in 2 places drifts. On the board you will find the counter, the translation table, and the frozen renumber log, plus a 2-line guard so a session that never loaded this skill still cannot renumber or reuse by accident. Everything else about the scheme belongs here. Fix a conflict here, not there.
 
 **Starting a fresh board:** open the counter at `#101`. Three digits keep an ID from ever reading as a positional index, and the leading `1` makes `#101` visibly not "item 1".
+
+## Hierarchical Topics Inside One Item — No Parent and Child Items
+
+⛔ Do not make one board item the child of another. When a body of work grows strands, keep it as 1 master-list item and give it a hierarchical topic table in its own memory file. Each strand becomes a topic or a sub-topic there. ⛔ Do not open a new board item for a new strand of an existing item; add a topic or sub-topic instead.
+
+- Numbering: Write "Topic 3" for a topic and "Topic 3(b)" for a sub-topic, ⛔ never a bare number or letter. IDs are permanent: a new sub-topic appends at the end of its topic, a new topic appends at the end, a done row stays in place, and a dropped row leaves its ID retired.
+- Master-list row: It names the topic file as the authority for topic status, lists the topics in 1 line, and carries the item's live state and next step by topic ID.
+- 📺 PRINTABLE BOARD: The item gets 1 row. Its State cell names the done and next topics by ID.
+- Notes doc: The item keeps 1 `Notes - …` doc, where chapter N holds Topic N.
+- `MEMORY.md`: 1 line for the item, with its supporting memory files indented under it.
+- Merging items that already exist: The absorbed item closes by merge, and its ID is retired. Move its row verbatim to the archive. Put a translation table of every old ID in the topic file. ⛔ Never rewrite the old IDs inside dated records.
+
+(Set 2026-11-05, when the user merged `#158` into `#157`: *"The goal is to stop using a parent-child relationship on the board. Rather, within the newly merged #157, I want a hierarchical topic table."* This replaced a Parent and Child Items section added 2026-11-02 for that same pair.)
 
 ## Procedure A — OPEN the Board
 
